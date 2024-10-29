@@ -1,0 +1,31 @@
+Rezolvare cerinta 1: PROCESUL DE DIRIJARE
+Pentru a implementa sectiunea de IPv4, extrag din buffer ether header-ul si ip header-ul si urmez pasii din cerinta.
+Dupe ce verific daca tipul etherului este 0x0800 (tipul unui pachet de tip IPv4):
+- daca pachetul este un icmp request, se trimite un reply folosind functia send_icmp cu type-ul 0 si se trece mai departe
+- daca pachetul este corupt, se recalculeaza checksum
+- daca ttl-ul a expirat, se apeleaza functia send_icmp cu type-ul 11, altfel ttl este decrementat si se recalculeaza checksum
+- se cauta urmatorul hop, folosind functia get_best_route. Daca ruta nu a fost gasita, se apeleaza functia send_icmp cu type-ul 3, 
+altfel se verifica daca ip-ul este in tabela arp a router-ului. Daca se gaseste, pachetul este trimis la urmatorul hop, altfel pachetul 
+este pus in coada si se trimite un arp request.
+
+
+Rezolvare cerinta 2: LONGEST PREFIX MATCH (eficient)
+Am folosit cautarea binara pentru a implementa algorimtul de LPM eficient. Initial, tabela de rutare este sortata folosind functia qsort, 
+pentru care am creat functia qsort_f, care compara prefixele a 2 intrari din tabela de rutare, iar daca acestea coincid, compara mastile 
+celor doua. Dupa sortarea tabelei cu qsort, folosesc functia binary_search pentru a gasi intrarea din tabela de rutare care are prefixul 
+egal cu operatia "and" pe biti dintre ip-ul destinatiei si masca acesteia.
+
+
+Rezolvare cerinta 3: PROTOCOLUL ARP
+In cadrul acestui task, am implementat functionalitatile pentru arp request si arp reply, intrucat acestea sunt cele doua cazuri posibile.
+Dupe ce verific daca tipul ether-ului este 0x0806 (tipul unui pachet de tip ARP):
+- daca pachetul este arp request, se vor modifica ether header-ul si arp header-ul pentru a trimite un reply cu ip-ul router-ului
+- daca pachetul este arp reply, se adauga in tabela arp noua adresa si folosesc functia send_pkt_inQ pentru a trimite pachetele din coada.
+
+
+Rezolvare cerinta 4: PROTOCOLUL ICMP
+In cadrul acestei cerinte, creez functia send_imcp, care implementeaza protoclul ARP, folosit atunci cand: destinatia este chiar 
+router-ul(0), ttl-ul a expirat(11) sau nu exista nicio intrare in tabela de rutare prin care sa se trimita pachetul(3).
+In aceasta functie, completez ether header-ul, ip header-ul si imcp header-ul cu datele corespunzatoare pentru a putea trimite pachetul 
+inapoi sursei.
+
